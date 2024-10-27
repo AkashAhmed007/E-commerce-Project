@@ -21,6 +21,20 @@ const data = {
             phone:'2453545454',
             address:'Sylhet'
         },
+        {
+            name:'Resma',
+            email:'resma@gmail.com',
+            password: '2342323',
+            phone:'645443434233',
+            address:'Jeshore'
+        },
+        {
+            name:'Dole Ahmed',
+            email:'dole@gmail.com',
+            password: '565676764',
+            phone:'6755342323',
+            address:'Chottogram'
+        },
     ],
 }
 
