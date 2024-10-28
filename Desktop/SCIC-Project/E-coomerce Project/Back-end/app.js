@@ -8,7 +8,7 @@ const testRouter = require("./Routers/testRouter");
 
 app.use(morgan('dev'))
 app.use(express.json())
-app.use(express.urlencoded())
+app.use(express.urlencoded({extended: true}))
 
 app.use('/api/users',userRouter)
 app.use('/api/test',testRouter)

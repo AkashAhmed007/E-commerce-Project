@@ -3,6 +3,9 @@ const User = require("../Models/userModel");
 const mongoose = require("mongoose");
 const { findWithId } = require("../Service/findItem");
 const { deleteImage } = require("../helper/deleteImage");
+const { secret } = require("../secret");
+const { createJsonWebToken } = require("../helper/jwt");
+
 const getUsers = async (req, res, next) => {
   try {
     const search = req.query.search || "";
@@ -65,26 +68,46 @@ const getUser = async (req, res, next) => {
   }
 };
 
-const deleteUser = async(req,res,next)=>{
-   try {
-      const id = req.params.id;
-      const options = { password: 0 };
-      const user = await findWithId(id, options);
+const deleteUser = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const options = { password: 0 };
+    const user = await findWithId(id, options);
 
-      const userImagePath = user.image
-      deleteImage(userImagePath)
+    const userImagePath = user.image;
+    deleteImage(userImagePath);
 
-      await User.findByIdAndDelete({
-         _id: id,
-         isAdmin: false
-      })
-      res.status(200).send({
-         success: true,
-         messege: "User was deleted successfully",
-       });
-   } catch (error) {
-      
-   }
-}
+    await User.findByIdAndDelete({
+      _id: id,
+      isAdmin: false,
+    });
+    res.status(200).send({
+      success: true,
+      messege: "User was deleted successfully",
+    });
+  } catch (error) {
+    console.error("User image doesnot exist");
+    next(error);
+  }
+};
 
-module.exports = { getUsers, getUser, deleteUser };
+const processRegister = async (req, res, next) => {
+  try {
+    const { name, email, password, address, phone } = req.body;
+
+    const userExists = await User.exists({email: email})
+    if (userExists) {
+      throw createError(409 , 'User Email Exist in the database')
+    } 
+    const token = createJsonWebToken({ name, email, password, address, phone },secret, '10m')
+    res.status(201).json({
+      success: true,
+      message: "User was created successfully",
+      payload: token,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getUsers, getUser, deleteUser, processRegister };
