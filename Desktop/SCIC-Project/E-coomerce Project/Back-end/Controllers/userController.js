@@ -6,6 +6,7 @@ const { deleteImage } = require("../helper/deleteImage");
 const { secret, clientURL } = require("../secret");
 const { createJsonWebToken } = require("../helper/jwt");
 const sendEmailWithNodemailer = require("../helper/email");
+const jwt = require('jsonwebtoken')
 
 const getUsers = async (req, res, next) => {
   try {
@@ -129,5 +130,26 @@ const processRegister = async (req, res, next) => {
   }
 };
 
-module.exports = { getUsers, getUser, deleteUser, processRegister };
+const activateAccount = async (req,res,next)=>{
+  try {
+    const token = req.body.token
+    if(!token) throw createError(404, 'token not found')
+    const decoded = jwt.verify(token, secret)
+    const userExists = await User.exists({email: decoded.email})
+    if (userExists) {
+      throw createError(409 , 'User Email Exist in the database')
+    } 
+
+
+    await User.create(decoded)
+    return res.status(201).json({
+      success: true,
+      message: 'User registered Successful',
+    });
+  } catch (error) {
+    next(error)
+  }
+}
+
+module.exports = { getUsers, getUser, deleteUser, processRegister, activateAccount };
 
