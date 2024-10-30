@@ -3,8 +3,9 @@ const User = require("../Models/userModel");
 const mongoose = require("mongoose");
 const { findWithId } = require("../Service/findItem");
 const { deleteImage } = require("../helper/deleteImage");
-const { secret } = require("../secret");
+const { secret, clientURL } = require("../secret");
 const { createJsonWebToken } = require("../helper/jwt");
+const sendEmailWithNodemailer = require("../helper/email");
 
 const getUsers = async (req, res, next) => {
   try {
@@ -100,10 +101,28 @@ const processRegister = async (req, res, next) => {
       throw createError(409 , 'User Email Exist in the database')
     } 
     const token = createJsonWebToken({ name, email, password, address, phone },secret, '10m')
+
+    const emailData={
+      email,
+      subject:"Account Activation Email",
+      html: `<h2> Hi,${name} </h2>
+      <p>Please click here to <a href=${clientURL}/api/users/activate/${token} target="_blank">activate your account</a></p>
+      
+      `
+    }
+
+    try {
+     await sendEmailWithNodemailer(emailData)
+    } catch (error) {
+      next(createError(500,'failed to send verification Email'))
+      return
+    }
+
+
     res.status(201).json({
       success: true,
-      message: "User was created successfully",
-      payload: token,
+      message: `go to your ${email} for verification`,
+      payload: {token},
     });
   } catch (error) {
     next(error);
@@ -111,3 +130,4 @@ const processRegister = async (req, res, next) => {
 };
 
 module.exports = { getUsers, getUser, deleteUser, processRegister };
+
